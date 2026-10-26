@@ -1,0 +1,13 @@
+import React from 'react';
+export default function HardwarePanel({ data, live, traffic, now }) {
+  const bytes = live && traffic?.byteAt != null && now - traffic.byteAt < 3000;
+  const sentences = live && traffic?.sentenceAt != null && now - traffic.sentenceAt < 3000;
+  return <section className="hardware-view">
+    <div className="section-heading"><div><span className="eyebrow">HARDWARE PROOF OF CONCEPT</span><h2>GPS & LoRa</h2></div><span>{!data ? 'Waiting for test firmware' : live ? 'Live USB status' : 'Last received status · not live'}</span></div>
+    <div className="hardware-grid"><article><span className="eyebrow">NEO-6M · UART2</span><h2>GPS</h2><p className="hardware-status">{!data ? 'Waiting for GPS status…' : !live ? 'Status is offline or stale' : !bytes ? 'No recent GPS serial data' : !sentences ? 'Bytes received · no recent valid NMEA' : data.gps.fix ? 'Position fix acquired' : 'Valid NMEA received · waiting for fix'}</p>
+      <dl><dt>Satellites</dt><dd>{data?.gps.satellites ?? '—'}</dd><dt>Latitude</dt><dd>{data?.gps.fix ? data.gps.lat.toFixed(6) : '—'}</dd><dt>Longitude</dt><dd>{data?.gps.fix ? data.gps.lng.toFixed(6) : '—'}</dd><dt>Received bytes</dt><dd>{data?.gps.chars ?? '—'}</dd><dt>Valid NMEA sentences</dt><dd>{data?.gps.sentences ?? '—'}</dd></dl><p className="subtle">TX → GPIO16 · RX → GPIO17 · 9600 baud. Test outdoors with a clear view of the sky; allow several minutes for the first fix. Offline coordinates are historical.</p></article>
+    <article><span className="eyebrow">RA-02 / SX1278 · SPI</span><h2>LoRa</h2><p className="hardware-status">{!data ? 'Waiting for radio status…' : !live ? 'Status is offline or stale' : !data.lora.ready ? 'Initialization failed · check wiring and power' : data.lora.rx > 0 ? 'Radio ready · packets received this session' : 'Radio initialized · reception unverified'}</p>
+      <dl><dt>Frequency</dt><dd>{data ? `${data.lora.frequencyMHz} MHz` : '—'}</dd><dt>Completed transmissions</dt><dd>{data?.lora.tx ?? '—'}</dd><dt>Received packets</dt><dd>{data?.lora.rx ?? '—'}</dd><dt>Last packet RSSI</dt><dd>{data?.lora.rssi != null ? `${data.lora.rssi} dBm` : '—'}</dd><dt>Last received payload</dt><dd className="packet">{data?.lora.lastPacket || '—'}</dd></dl><p className="subtle">A TX count proves local transmission completed. A second radio with matching settings confirms over-the-air reception. RX count and RSSI describe packets received by this board.</p></article></div>
+    <p className="hardware-help">Upload firmware/gps_lora_poc/gps_lora_poc.ino, close Serial Monitor, then connect here. This sketch tests GPS and LoRa only. The old water sensor wiring on GPIO5/18 conflicts with LoRa.</p>
+  </section>;
+}
